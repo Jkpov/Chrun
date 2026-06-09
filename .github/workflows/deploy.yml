@@ -50,3 +50,11 @@ jobs:
         run: |
           docker run --rm churn-app python -m pytest tests/ -q
 
+      - name: Initialize Elastic Beanstalk Application
+        run: |
+          eb init -p docker churn-josias --region eu-west-1
+ 
+      - name: Deploy to Elastic Beanstalk
+        run: |
+          eb deploy churn-josias-env
+
