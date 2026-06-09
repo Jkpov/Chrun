@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app.py app.py
 COPY data data
 COPY templates templates
-#COPY tests tests
+COPY tests tests
  
 EXPOSE 5000
  
