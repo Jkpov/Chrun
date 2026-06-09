@@ -28,10 +28,12 @@ def predict():
         }])
 
         prediction = int(model.predict(data)[0])
+        probability = round(float(model.predict_proba(data)[0][1]) * 100, 2)
 
         return jsonify({
             "prediction": prediction,
-            "message": "Churn" if prediction == 1 else "No Churn"
+            "message": "Churn" if prediction == 1 else "No Churn",
+            "probability": probability
         })
 
     except Exception as e:
