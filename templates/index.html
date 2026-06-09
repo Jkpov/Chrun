@@ -324,7 +324,7 @@
 
         const isChurn = data.prediction === 1;
         resultVal.textContent   = isChurn ? 'Risque de churn détecté' : 'Client stable';
-        resultBadge.textContent = `prediction = ${data.prediction}`;
+        resultBadge.textContent = `prediction = ${data.prediction} · probabilité = ${data.probability}%`;
         resultBox.className     = `result show ${isChurn ? 'churn' : 'no-churn'}`;
 
       } catch (err) {
