@@ -31,7 +31,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-1
+          aws-region: eu-north-1
           
       - name: Install dependencies
         run: |
@@ -52,7 +52,7 @@ jobs:
 
       - name: Initialize Elastic Beanstalk Application
         run: |
-          eb init -p docker churn-josias --region eu-west-1
+          eb init -p docker churn-josias --region eu-north-1
  
       - name: Deploy to Elastic Beanstalk
         run: |
