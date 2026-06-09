@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Churn Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #161a23;
+      --border:    #252b38;
+      --accent:    #4f8ef7;
+      --danger:    #f75f5f;
+      --success:   #3dd68c;
+      --text:      #e8eaf0;
+      --muted:     #636b80;
+      --mono:      'IBM Plex Mono', monospace;
+      --sans:      'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 20px 80px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 40px;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 38px);
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -.02em;
+    }
+
+    h1 span { color: var(--accent); }
+
+    .subtitle {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 300;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+
+    .fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+
+    label {
+      font-size: 11px;
+      font-family: var(--mono);
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    input[type="number"],
+    select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 15px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="number"]:focus,
+    select:focus { border-color: var(--accent); }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23636b80' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 28px 0;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: var(--sans);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      padding: 13px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+    }
+
+    button[type="submit"]:hover { opacity: .88; }
+    button[type="submit"]:active { transform: scale(.98); }
+    button[type="submit"]:disabled { opacity: .45; cursor: not-allowed; }
+
+    .result {
+      margin-top: 20px;
+      border-radius: 8px;
+      padding: 18px 20px;
+      display: none;
+      border: 1px solid transparent;
+    }
+
+    .result.show { display: block; }
+
+    .result.churn {
+      background: rgba(247, 95, 95, .08);
+      border-color: rgba(247, 95, 95, .3);
+    }
+
+    .result.no-churn {
+      background: rgba(61, 214, 140, .08);
+      border-color: rgba(61, 214, 140, .3);
+    }
+
+    .result.error {
+      background: rgba(255, 180, 0, .07);
+      border-color: rgba(255, 180, 0, .25);
+    }
+
+    .result-label {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+
+    .result.churn    .result-value { color: var(--danger); }
+    .result.no-churn .result-value { color: var(--success); }
+    .result.error    .result-value { color: #ffb400; font-size: 14px; font-weight: 400; }
+
+    .result-badge {
+      display: inline-block;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 6px;
+    }
+
+    .result.churn    .result-badge { background: rgba(247,95,95,.15);  color: var(--danger); }
+    .result.no-churn .result-badge { background: rgba(61,214,140,.15); color: var(--success); }
+
+    .loader {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.2);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .endpoint {
+      margin-top: 28px;
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .endpoint code {
+      color: var(--accent);
+      background: rgba(79,142,247,.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    @media (max-width: 480px) {
+      .fields { grid-template-columns: 1fr; }
+      .field.full { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <p class="eyebrow">Logistic Regression · Pipeline</p>
+    <h1>Customer <span>Churn</span><br>Predictor</h1>
+    <p class="subtitle">Renseignez les caractéristiques du client pour obtenir une prédiction de rétention.</p>
+  </header>
+
+  <div class="card">
+    <form id="churnForm">
+      <div class="fields">
+
+        <div class="field">
+          <label for="Age">Âge</label>
+          <input type="number" id="Age" name="Age" placeholder="42" min="18" max="100" required />
+        </div>
+
+        <div class="field">
+          <label for="Years">Ancienneté (ans)</label>
+          <input type="number" id="Years" name="Years" placeholder="6" min="0" max="50" step="0.1" required />
+        </div>
+
+        <div class="field">
+          <label for="Num_Sites">Nombre de sites</label>
+          <input type="number" id="Num_Sites" name="Num_Sites" placeholder="18" min="1" required />
+        </div>
+
+        <div class="field">
+          <label for="Account_Manager">Account Manager</label>
+          <select id="Account_Manager" name="Account_Manager" required>
+            <option value="" disabled selected>Choisir…</option>
+            <option value="1">Oui — assigné</option>
+            <option value="0">Non — sans AM</option>
+          </select>
+        </div>
+
+      </div>
+
+      <hr class="divider"/>
+
+      <button type="submit" id="submitBtn">Prédire le churn</button>
+
+      <div class="result" id="result">
+        <p class="result-label">Résultat</p>
+        <p class="result-value" id="resultValue"></p>
+        <span class="result-badge" id="resultBadge"></span>
+      </div>
+    </form>
+
+    <p class="endpoint">POST <code>/predict</code></p>
+  </div>
+
+  <script>
+    const form        = document.getElementById('churnForm');
+    const btn         = document.getElementById('submitBtn');
+    const resultBox   = document.getElementById('result');
+    const resultVal   = document.getElementById('resultValue');
+    const resultBadge = document.getElementById('resultBadge');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="loader"></span>Analyse en cours…';
+      resultBox.className = 'result';
+
+      const body = new URLSearchParams({
+        Age:             document.getElementById('Age').value,
+        Account_Manager: document.getElementById('Account_Manager').value,
+        Years:           document.getElementById('Years').value,
+        Num_Sites:       document.getElementById('Num_Sites').value,
+      });
+
+      try {
+        const res  = await fetch('/predict', {
+          method: 'POST',
+          body,
+        });
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        const isChurn = data.prediction === 1;
+        resultVal.textContent   = isChurn ? 'Risque de churn détecté' : 'Client stable';
+        resultBadge.textContent = `prediction = ${data.prediction}`;
+        resultBox.className     = `result show ${isChurn ? 'churn' : 'no-churn'}`;
+
+      } catch (err) {
+        resultVal.textContent   = err.message || "Erreur de connexion à l'API.";
+        resultBadge.textContent = '';
+        resultBox.className     = 'result show error';
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Prédire le churn';
+      }
+    });
+  </script>
+
+</body>
+</html>
